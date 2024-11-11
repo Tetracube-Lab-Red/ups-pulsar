@@ -5,7 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import red.tetracube.upspulsar.dto.DeviceProvisioningRequest;
+import red.tetracube.upspulsar.dto.UPSDevice;
 import red.tetracube.upspulsar.dto.exceptions.UPSPulsarException;
 import red.tetracube.upspulsar.services.UPSDevicesServices;
 
@@ -19,7 +19,7 @@ public class UPSDevicesResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void deviceProvisioning(@Valid DeviceProvisioningRequest request) {
+    public void deviceProvisioning(@Valid UPSDevice request) {
         var upsCreationResult = upsDevicesServices.createDevice(request);
         if (upsCreationResult.isSuccess()) {
             return;
@@ -31,4 +31,20 @@ public class UPSDevicesResource {
             throw new InternalServerErrorException(upsCreationResult.getException());
         }
     }
+
+    @Path("/{name}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public UPSDevice getByName(@PathParam("name") String name) {
+        var getByNameResult = upsDevicesServices.getByName(name);
+        if (getByNameResult.isSuccess()) {
+            return getByNameResult.getContent();
+        }
+        if (getByNameResult.getException() instanceof UPSPulsarException.EntityNotFoundException) {
+            throw new NotFoundException(getByNameResult.getException().getMessage());
+        } else {
+            throw new InternalServerErrorException(getByNameResult.getException());
+        }
+    }
+
 }
