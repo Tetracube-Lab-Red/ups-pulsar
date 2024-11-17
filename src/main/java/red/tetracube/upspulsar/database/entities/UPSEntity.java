@@ -1,11 +1,9 @@
 package red.tetracube.upspulsar.database.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -23,5 +21,11 @@ public class UPSEntity extends PanacheEntityBase {
 
     @Column(name = "port", nullable = false)
     public Integer port;
+
+    @OneToMany(targetEntity = UPSScanTelemetryEntity.class, fetch = FetchType.LAZY, mappedBy = "ups", orphanRemoval = true)
+    public List<UPSScanTelemetryEntity> scanTelemetries;
+
+    @OneToMany(targetEntity = UPSTelemetryEntity.class, fetch = FetchType.LAZY, mappedBy = "ups", orphanRemoval = true)
+    public List<UPSTelemetryEntity> telemetries;
 
 }
