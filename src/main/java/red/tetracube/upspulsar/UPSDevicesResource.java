@@ -1,4 +1,4 @@
-package red.tetracube;
+package red.tetracube.upspulsar;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
