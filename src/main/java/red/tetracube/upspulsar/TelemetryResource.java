@@ -4,7 +4,7 @@ import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import red.tetracube.upspulsar.dto.UPSBasicTelemetryData;
+import red.tetracube.upspulsar.dto.UPSTelemetryData;
 import red.tetracube.upspulsar.dto.exceptions.UPSPulsarException;
 import red.tetracube.upspulsar.services.UPSTelemetryServices;
 
@@ -18,8 +18,8 @@ public class TelemetryResource {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    public UPSBasicTelemetryData getBasicUPSTelemetry(@PathParam("internalName") String internalName) {
-        var telemetryResult = upsTelemetryServices.getBasicUPSTelemetry(internalName);
+    public UPSTelemetryData getUPSTelemetry(@PathParam("internalName") String internalName) {
+        var telemetryResult = upsTelemetryServices.getUPSTelemetry(internalName);
         if (!telemetryResult.isSuccess()) {
             if (telemetryResult.getException() instanceof UPSPulsarException.EntityNotFoundException) {
                 throw new NotFoundException();

@@ -7,7 +7,7 @@ import red.tetracube.upspulsar.database.entities.UPSEntity;
 import red.tetracube.upspulsar.database.entities.UPSScanTelemetryEntity;
 import red.tetracube.upspulsar.database.entities.UPSTelemetryEntity;
 import red.tetracube.upspulsar.dto.Result;
-import red.tetracube.upspulsar.dto.UPSBasicTelemetryData;
+import red.tetracube.upspulsar.dto.UPSTelemetryData;
 import red.tetracube.upspulsar.dto.exceptions.UPSPulsarException;
 
 import java.util.Arrays;
@@ -16,7 +16,7 @@ import java.util.Arrays;
 public class UPSTelemetryServices {
 
     @Transactional
-    public Result<UPSBasicTelemetryData> getBasicUPSTelemetry(String upsInternalName) {
+    public Result<UPSTelemetryData> getUPSTelemetry(String upsInternalName) {
         var optionalDevice = UPSEntity.<UPSEntity>find("name", upsInternalName)
                 .firstResultOptional();
         if (optionalDevice.isEmpty()) {
@@ -32,15 +32,38 @@ public class UPSTelemetryServices {
         if (optionalConnectionTelemetry.isEmpty()) {
             return Result.failed(new UPSPulsarException.EntityNotFoundException("No connection telemetry found for device"));
         }
-        var basicTelemetryData = new UPSBasicTelemetryData(
-                optionalDevice.get().name,
-                Arrays.asList(optionalTelemetry.get().primaryStatus, optionalTelemetry.get().secondaryStatus),
-                optionalConnectionTelemetry.get().connectivity,
-                optionalConnectionTelemetry.get().telemetryStatus,
-                optionalTelemetry.get().telemetryTS
+
+        var basicTelemetryData = getUpsTelemetryData(
+                optionalConnectionTelemetry.get(),
+                optionalTelemetry.get(),
+                optionalDevice.get()
         );
         return Result.success(basicTelemetryData);
     }
 
+    private static UPSTelemetryData getUpsTelemetryData(
+            UPSScanTelemetryEntity connectionTelemetry,
+            UPSTelemetryEntity telemetry,
+            UPSEntity device
+    ) {
+        return new UPSTelemetryData(
+                device.name,
+                telemetry.outFrequency,
+                telemetry.outVoltage,
+                telemetry.outCurrent,
+                telemetry.batteryVoltage,
+                telemetry.batteryRuntime,
+                telemetry.load,
+                telemetry.temperature,
+                telemetry.inFrequency,
+                telemetry.inVoltage,
+                telemetry.powerFactor,
+                telemetry.batteryCharge,
+                Arrays.asList(telemetry.primaryStatus, telemetry.secondaryStatus),
+                connectionTelemetry.connectivity,
+                connectionTelemetry.telemetryStatus,
+                telemetry.telemetryTS
+        );
+    }
 
 }
