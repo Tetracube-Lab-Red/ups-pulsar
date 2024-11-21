@@ -11,6 +11,7 @@ import red.tetracube.upspulsar.dto.UPSTelemetryData;
 import red.tetracube.upspulsar.dto.exceptions.UPSPulsarException;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 @ApplicationScoped
 public class UPSTelemetryServices {
@@ -24,9 +25,6 @@ public class UPSTelemetryServices {
         }
         var optionalTelemetry = UPSTelemetryEntity.<UPSTelemetryEntity>find("ups", Sort.descending("telemetryTS"), optionalDevice.get())
                 .firstResultOptional();
-        if (optionalTelemetry.isEmpty()) {
-            return Result.failed(new UPSPulsarException.EntityNotFoundException("No telemetry found for device"));
-        }
         var optionalConnectionTelemetry = UPSScanTelemetryEntity.<UPSScanTelemetryEntity>find("ups", Sort.descending("telemetryTS"), optionalDevice.get())
                 .firstResultOptional();
         if (optionalConnectionTelemetry.isEmpty()) {
@@ -35,7 +33,7 @@ public class UPSTelemetryServices {
 
         var basicTelemetryData = getUpsTelemetryData(
                 optionalConnectionTelemetry.get(),
-                optionalTelemetry.get(),
+                optionalTelemetry,
                 optionalDevice.get()
         );
         return Result.success(basicTelemetryData);
@@ -43,26 +41,29 @@ public class UPSTelemetryServices {
 
     private static UPSTelemetryData getUpsTelemetryData(
             UPSScanTelemetryEntity connectionTelemetry,
-            UPSTelemetryEntity telemetry,
+            Optional<UPSTelemetryEntity> telemetry,
             UPSEntity device
     ) {
         return new UPSTelemetryData(
                 device.name,
-                telemetry.outFrequency,
-                telemetry.outVoltage,
-                telemetry.outCurrent,
-                telemetry.batteryVoltage,
-                telemetry.batteryRuntime,
-                telemetry.load,
-                telemetry.temperature,
-                telemetry.inFrequency,
-                telemetry.inVoltage,
-                telemetry.powerFactor,
-                telemetry.batteryCharge,
-                Arrays.asList(telemetry.primaryStatus, telemetry.secondaryStatus),
+                telemetry.map(t -> t.outFrequency).orElse(0f),
+                telemetry.map(t -> t.outVoltage).orElse(0f),
+                telemetry.map(t -> t.outCurrent).orElse(0f),
+                telemetry.map(t -> t.batteryVoltage).orElse(0f),
+                telemetry.map(t -> t.batteryRuntime).orElse(0L),
+                telemetry.map(t -> t.load).orElse(0L),
+                telemetry.map(t -> t.temperature).orElse(0f),
+                telemetry.map(t -> t.inFrequency).orElse(0f),
+                telemetry.map(t -> t.inVoltage).orElse(0f),
+                telemetry.map(t -> t.powerFactor).orElse(0f),
+                telemetry.map(t -> t.batteryCharge).orElse(0f),
+                telemetry.map(t ->
+                                Arrays.asList(t.primaryStatus, t.secondaryStatus)
+                        )
+                        .orElse(null),
                 connectionTelemetry.connectivity,
                 connectionTelemetry.telemetryStatus,
-                telemetry.telemetryTS
+                connectionTelemetry.telemetryTS
         );
     }
 

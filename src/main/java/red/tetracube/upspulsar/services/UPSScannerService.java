@@ -1,9 +1,11 @@
 package red.tetracube.upspulsar.services;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import red.tetracube.upspulsar.clients.BrokerClient;
 import red.tetracube.upspulsar.clients.NUTClient;
 import red.tetracube.upspulsar.database.entities.UPSEntity;
 import red.tetracube.upspulsar.database.entities.UPSScanTelemetryEntity;
@@ -21,6 +23,9 @@ import java.util.UUID;
 @ApplicationScoped
 public class UPSScannerService {
 
+    @Inject
+    BrokerClient brokerClient;
+
     private final static Logger LOG = LoggerFactory.getLogger(UPSScannerService.class);
 
     @Transactional
@@ -32,9 +37,11 @@ public class UPSScannerService {
         upsList.stream()
                 .map(ups -> {
                     var upsData = new HashMap<String, String>();
+                    var telemetryMapper = new TelemetryMapper(ups, upsData);
                     try {
                         upsData.putAll(getUPSData(ups));
                         storeSuccessfulScan(ups);
+                        telemetryMapper.buildDeviceTelemetry();
                     } catch (ConnectException | UnknownHostException e) {
                         LOG.error("No host found for NUT {}:{} for UPS {}",
                                 ups.host,
@@ -52,11 +59,12 @@ public class UPSScannerService {
                         );
                         storeInvalidResponse(ups);
                     }
-                    var telemetryMapper = new TelemetryMapper(ups, upsData);
-                    telemetryMapper.buildDeviceTelemetry();
                     return telemetryMapper.upsTelemetryEntity;
                 })
-                .forEach(upsTelemetryEntity -> upsTelemetryEntity.persist());
+                .forEach(upsTelemetryEntity -> {
+                    upsTelemetryEntity.persist();
+                    brokerClient.publishScanTelemetryBit(upsTelemetryEntity.ups.name);
+                });
     }
 
     private HashMap<String, String> getUPSData(UPSEntity ups) throws IOException {
