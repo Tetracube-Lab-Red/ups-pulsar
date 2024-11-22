@@ -22,9 +22,6 @@ public class UPSEntity extends PanacheEntityBase {
     @Column(name = "port", nullable = false)
     public Integer port;
 
-    @OneToMany(targetEntity = UPSScanTelemetryEntity.class, fetch = FetchType.LAZY, mappedBy = "ups", orphanRemoval = true)
-    public List<UPSScanTelemetryEntity> scanTelemetries;
-
     @OneToMany(targetEntity = UPSTelemetryEntity.class, fetch = FetchType.LAZY, mappedBy = "ups", orphanRemoval = true)
     public List<UPSTelemetryEntity> telemetries;
 
