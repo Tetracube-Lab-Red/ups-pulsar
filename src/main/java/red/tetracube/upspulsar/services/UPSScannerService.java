@@ -8,17 +8,13 @@ import org.slf4j.LoggerFactory;
 import red.tetracube.upspulsar.clients.BrokerClient;
 import red.tetracube.upspulsar.clients.NUTClient;
 import red.tetracube.upspulsar.database.entities.UPSEntity;
-import red.tetracube.upspulsar.database.entities.UPSScanTelemetryEntity;
-import red.tetracube.upspulsar.enumerations.ConnectivityStatus;
-import red.tetracube.upspulsar.enumerations.TelemetryStatus;
+import red.tetracube.upspulsar.database.entities.UPSTelemetryEntity;
 import red.tetracube.upspulsar.mappers.TelemetryMapper;
 
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
-import java.time.Instant;
 import java.util.HashMap;
-import java.util.UUID;
 
 @ApplicationScoped
 public class UPSScannerService {
@@ -36,30 +32,18 @@ public class UPSScannerService {
         LOG.info("Found {} UPSs to scan", upsList.size());
         upsList.stream()
                 .map(ups -> {
-                    var upsData = new HashMap<String, String>();
-                    var telemetryMapper = new TelemetryMapper(ups, upsData);
                     try {
-                        upsData.putAll(getUPSData(ups));
-                        storeSuccessfulScan(ups);
+                        var upsData = new HashMap<>(getUPSData(ups));
+                        var telemetryMapper = new TelemetryMapper(ups, upsData);
                         telemetryMapper.buildDeviceTelemetry();
+                        return telemetryMapper.upsTelemetryEntity;
                     } catch (ConnectException | UnknownHostException e) {
-                        LOG.error("No host found for NUT {}:{} for UPS {}",
-                                ups.host,
-                                ups.port,
-                                ups.name,
-                                e
-                        );
-                        storeUnreachableUPS(ups);
+                        LOG.error("Cannot reach NUT server due error: ", e);
+                        return UPSTelemetryEntity.buildUnhealthyConnectivityTelemetry(ups);
                     } catch (IOException e) {
-                        LOG.error("Cannot retrieve data from NUT {}:{} for UPS {}",
-                                ups.host,
-                                ups.port,
-                                ups.name,
-                                e
-                        );
-                        storeInvalidResponse(ups);
+                        LOG.error("Cannot retrieve data due error: ", e);
+                        return UPSTelemetryEntity.buildInvalidTelemetry(ups);
                     }
-                    return telemetryMapper.upsTelemetryEntity;
                 })
                 .forEach(upsTelemetryEntity -> {
                     upsTelemetryEntity.persist();
@@ -71,28 +55,6 @@ public class UPSScannerService {
         try (var nutClient = new NUTClient(ups)) {
             return nutClient.retrieveUPSData();
         }
-    }
-
-    private void storeUnreachableUPS(UPSEntity ups) {
-        storeScan(ups, TelemetryStatus.NOT_TRANSMITTING, ConnectivityStatus.UNREACHABLE);
-    }
-
-    private void storeInvalidResponse(UPSEntity ups) {
-        storeScan(ups, TelemetryStatus.INVALID_RESPONSE, ConnectivityStatus.ONLINE);
-    }
-
-    private void storeSuccessfulScan(UPSEntity ups) {
-        storeScan(ups, TelemetryStatus.TRANSMITTING, ConnectivityStatus.ONLINE);
-    }
-
-    private void storeScan(UPSEntity ups, TelemetryStatus telemetryStatus, ConnectivityStatus connectivityStatus) {
-        var scanTelemetryEntity = new UPSScanTelemetryEntity();
-        scanTelemetryEntity.id = UUID.randomUUID();
-        scanTelemetryEntity.telemetryTS = Instant.now();
-        scanTelemetryEntity.telemetryStatus = telemetryStatus;
-        scanTelemetryEntity.connectivity = connectivityStatus;
-        scanTelemetryEntity.ups = ups;
-        scanTelemetryEntity.persist();
     }
 
 }

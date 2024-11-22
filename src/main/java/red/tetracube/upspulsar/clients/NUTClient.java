@@ -42,11 +42,11 @@ public class NUTClient implements AutoCloseable {
         while (true) {
             var responseLine = reader.readLine();
             if (responseLine.startsWith("BEGIN")) {
-                LOG.info("Ignoring telemetry begin line");
+                LOG.debug("Ignoring telemetry begin line");
                 continue;
             }
             if (responseLine.startsWith("END")) {
-                LOG.info("Read response completed, ignoring the line");
+                LOG.debug("Read response completed, ignoring the line");
                 break;
             }
 
@@ -59,7 +59,7 @@ public class NUTClient implements AutoCloseable {
             var key = matcher.group(2).trim();
             var rawValue = matcher.group(3).replaceAll("\"", "").trim();
             telemetryMap.put(key, rawValue);
-            LOG.info("Received telemetry {} -> {}", key, rawValue);
+            LOG.debug("Received telemetry {} -> {}", key, rawValue);
         }
         if(telemetryMap.isEmpty()) {
             throw new IOException("Empty UPS response");

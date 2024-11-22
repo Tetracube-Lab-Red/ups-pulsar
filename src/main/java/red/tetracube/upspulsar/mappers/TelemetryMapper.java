@@ -2,6 +2,8 @@ package red.tetracube.upspulsar.mappers;
 
 import red.tetracube.upspulsar.database.entities.UPSEntity;
 import red.tetracube.upspulsar.database.entities.UPSTelemetryEntity;
+import red.tetracube.upspulsar.enumerations.ConnectivityHealth;
+import red.tetracube.upspulsar.enumerations.TelemetryHealth;
 import red.tetracube.upspulsar.enumerations.UPSStatus;
 
 import java.time.Instant;
@@ -20,6 +22,8 @@ public class TelemetryMapper {
         this.upsTelemetryEntity.ups = upsEntity;
         this.upsTelemetryEntity.telemetryTS = Instant.now();
         this.upsTelemetryEntity.id = UUID.randomUUID();
+        this.upsTelemetryEntity.telemetryHealth = TelemetryHealth.TRANSMITTING;
+        this.upsTelemetryEntity.connectivityHealth = ConnectivityHealth.ONLINE;
     }
 
     public void buildDeviceTelemetry() {

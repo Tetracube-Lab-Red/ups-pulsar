@@ -2,6 +2,8 @@ package red.tetracube.upspulsar.database.entities;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import red.tetracube.upspulsar.enumerations.ConnectivityHealth;
+import red.tetracube.upspulsar.enumerations.TelemetryHealth;
 import red.tetracube.upspulsar.enumerations.UPSStatus;
 
 import java.time.Instant;
@@ -41,9 +43,6 @@ public class UPSTelemetryEntity extends PanacheEntityBase {
     @Column(name = "battery_voltage_nominal")
     public float batteryVoltageNominal;
 
-    @Column(name = "telemetry_ts")
-    public Instant telemetryTS;
-
     @Column(name = "load")
     public Long load;
 
@@ -73,7 +72,39 @@ public class UPSTelemetryEntity extends PanacheEntityBase {
     @Column(name = "secondary_status")
     public UPSStatus secondaryStatus;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "connectivity_health", nullable = false)
+    public ConnectivityHealth connectivityHealth;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "telemetry_health", nullable = false)
+    public TelemetryHealth telemetryHealth;
+
+    @Column(name = "telemetry_ts", nullable = false)
+    public Instant telemetryTS;
+
     @ManyToOne(targetEntity = UPSEntity.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "ups_device_id", nullable = false)
     public UPSEntity ups;
+
+    public static UPSTelemetryEntity buildUnhealthyConnectivityTelemetry(UPSEntity ups) {
+        var entity = new UPSTelemetryEntity();
+        entity.id = UUID.randomUUID();
+        entity.ups = ups;
+        entity.connectivityHealth = ConnectivityHealth.UNREACHABLE;
+        entity.telemetryHealth = TelemetryHealth.NOT_TRANSMITTING;
+        entity.telemetryTS = Instant.now();
+        return entity;
+    }
+
+    public static UPSTelemetryEntity buildInvalidTelemetry(UPSEntity ups) {
+        var entity = new UPSTelemetryEntity();
+        entity.id = UUID.randomUUID();
+        entity.ups = ups;
+        entity.connectivityHealth = ConnectivityHealth.ONLINE;
+        entity.telemetryHealth = TelemetryHealth.INVALID_RESPONSE;
+        entity.telemetryTS = Instant.now();
+        return entity;
+    }
+
 }

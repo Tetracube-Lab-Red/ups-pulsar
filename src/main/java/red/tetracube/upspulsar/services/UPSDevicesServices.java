@@ -46,13 +46,7 @@ public class UPSDevicesServices {
     public Result<UPSDevice> getByName(String name) {
         return UPSEntity.<UPSEntity>find("name", name)
                 .firstResultOptional()
-                .map(d ->
-                        new UPSDevice(
-                                d.host,
-                                d.port,
-                                d.name
-                        )
-                )
+                .map(d -> new UPSDevice(d.host, d.port, d.name))
                 .map(Result::success)
                 .orElseGet(() -> Result.failed(new UPSPulsarException.EntityNotFoundException("Device with name " + name + " not found")));
     }

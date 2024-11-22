@@ -1,6 +1,6 @@
 package red.tetracube.upspulsar.enumerations;
 
-public enum TelemetryStatus {
+public enum TelemetryHealth {
     TRANSMITTING,
     INVALID_RESPONSE,
     NOT_TRANSMITTING

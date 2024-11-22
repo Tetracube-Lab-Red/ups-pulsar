@@ -58,12 +58,9 @@ public class BrokerClient {
 
     public void publishScanTelemetryBit(String upsName) {
         try {
-            this.publishMessage(
-                    "devices/telemetry/UPS",
-                    upsName
-            );
+            this.publishMessage("devices/telemetry/UPS", upsName);
         } catch (JsonProcessingException e) {
-            LOGGER.error("Cannot send telemetry statistics for the error");
+            LOGGER.error("Cannot send telemetry statistics for the error", e);
         }
     }
 

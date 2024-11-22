@@ -1,7 +1,7 @@
 package red.tetracube.upspulsar.dto;
 
-import red.tetracube.upspulsar.enumerations.ConnectivityStatus;
-import red.tetracube.upspulsar.enumerations.TelemetryStatus;
+import red.tetracube.upspulsar.enumerations.ConnectivityHealth;
+import red.tetracube.upspulsar.enumerations.TelemetryHealth;
 import red.tetracube.upspulsar.enumerations.UPSStatus;
 
 import java.time.Instant;
@@ -21,8 +21,8 @@ public record UPSTelemetryData(
         float powerFactor,
         float batteryCharge,
         List<UPSStatus> statuses,
-        ConnectivityStatus connectivityStatus,
-        TelemetryStatus telemetryStatus,
+        ConnectivityHealth connectivityHealth,
+        TelemetryHealth telemetryHealth,
         Instant telemetryTS
 ) {
 }
