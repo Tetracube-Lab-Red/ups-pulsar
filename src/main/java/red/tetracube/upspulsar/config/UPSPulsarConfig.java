@@ -4,5 +4,5 @@ import io.smallrye.config.ConfigMapping;
 
 @ConfigMapping(prefix = "ups-pulsar")
 public interface UPSPulsarConfig {
-    MqttConfig mqtt();
+    
 }

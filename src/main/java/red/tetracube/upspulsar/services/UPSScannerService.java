@@ -5,7 +5,6 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import red.tetracube.upspulsar.clients.BrokerClient;
 import red.tetracube.upspulsar.clients.NUTClient;
 import red.tetracube.upspulsar.database.entities.UPSEntity;
 import red.tetracube.upspulsar.database.entities.UPSTelemetryEntity;
@@ -18,9 +17,6 @@ import java.util.HashMap;
 
 @ApplicationScoped
 public class UPSScannerService {
-
-    @Inject
-    BrokerClient brokerClient;
 
     private final static Logger LOG = LoggerFactory.getLogger(UPSScannerService.class);
 
@@ -47,7 +43,7 @@ public class UPSScannerService {
                 })
                 .forEach(upsTelemetryEntity -> {
                     upsTelemetryEntity.persist();
-                    brokerClient.publishScanTelemetryBit(upsTelemetryEntity.ups.name);
+                //    brokerClient.publishScanTelemetryBit(upsTelemetryEntity.ups.name);
                 });
     }
 

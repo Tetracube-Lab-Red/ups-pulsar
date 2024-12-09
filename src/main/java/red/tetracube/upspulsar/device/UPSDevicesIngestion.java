@@ -1,26 +1,37 @@
-package red.tetracube.upspulsar;
+package red.tetracube.upspulsar.device;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import red.tetracube.upspulsar.dto.UPSDevice;
+import red.tetracube.upspulsar.device.payloads.kafka.UPSProvisioning;
 import red.tetracube.upspulsar.dto.exceptions.UPSPulsarException;
-import red.tetracube.upspulsar.services.UPSDevicesServices;
+import red.tetracube.upspulsar.enumerations.DeviceType;
 
-@Path("/device")
-public class UPSDevicesResource {
+@ApplicationScoped
+public class UPSDevicesIngestion {
 
     @Inject
     UPSDevicesServices upsDevicesServices;
 
-    @Path("/provisioning")
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deviceProvisioning(@Valid UPSDevice request) {
-        var upsCreationResult = upsDevicesServices.createDevice(request);
+    @Inject
+    ObjectMapper objectMapper;
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(UPSDevicesIngestion.class);
+
+    @RunOnVirtualThread
+    @Incoming("device-provisioning")
+    public void deviceProvisioning(ConsumerRecord<DeviceType, UPSProvisioning> upsProvisioning) {
+        var upsCreationResult = upsDevicesServices.createDevice(upsProvisioning.value());
         if (upsCreationResult.isSuccess()) {
             return;
         }
@@ -32,7 +43,7 @@ public class UPSDevicesResource {
         }
     }
 
-    @Path("/{name}")
+    /* @Path("/{name}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public UPSDevice getByName(@PathParam("name") String name) {
@@ -45,6 +56,6 @@ public class UPSDevicesResource {
         } else {
             throw new InternalServerErrorException(getByNameResult.getException());
         }
-    }
+    } */
 
 }
