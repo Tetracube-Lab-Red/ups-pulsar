@@ -1,7 +1,6 @@
 package red.tetracube.upspulsar.services;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +21,10 @@ public class UPSScannerService {
 
     @Transactional
     public void doUPSsScan() {
-        LOG.info("Collecting UPSs to scan");
+        LOG.debug("Collecting UPSs to scan");
         var upsList = UPSEntity.<UPSEntity>findAll().stream()
                 .toList();
-        LOG.info("Found {} UPSs to scan", upsList.size());
+        LOG.debug("Found {} UPSs to scan", upsList.size());
         upsList.stream()
                 .map(ups -> {
                     try {

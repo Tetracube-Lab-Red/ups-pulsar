@@ -2,45 +2,37 @@ package red.tetracube.upspulsar.device;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.json.JsonObject;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Response;
 import red.tetracube.upspulsar.device.payloads.kafka.UPSProvisioning;
-import red.tetracube.upspulsar.dto.exceptions.UPSPulsarException;
 import red.tetracube.upspulsar.enumerations.DeviceType;
 
+import java.util.UUID;
+
 @ApplicationScoped
-public class UPSDevicesIngestion {
+public class DeviceKafka {
 
     @Inject
     UPSDevicesServices upsDevicesServices;
 
-    @Inject
-    ObjectMapper objectMapper;
-
-    private final static Logger LOGGER = LoggerFactory.getLogger(UPSDevicesIngestion.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(DeviceKafka.class);
 
     @RunOnVirtualThread
     @Incoming("device-provisioning")
-    public void deviceProvisioning(ConsumerRecord<DeviceType, UPSProvisioning> upsProvisioning) {
+    @Outgoing("device-provisioning-ack")
+    public UUID deviceProvisioning(ConsumerRecord<DeviceType, UPSProvisioning> upsProvisioning) {
+        LOGGER.info("Arrived a message of device provisioning");
         var upsCreationResult = upsDevicesServices.createDevice(upsProvisioning.value());
         if (upsCreationResult.isSuccess()) {
-            return;
+            LOGGER.info("Sending back provisioning feedback");
+            return upsProvisioning.value().deviceId;
         }
-
-        if (upsCreationResult.getException() instanceof UPSPulsarException.EntityExistsException) {
-            throw new ClientErrorException("Device already exists", Response.Status.CONFLICT);
-        } else {
-            throw new InternalServerErrorException(upsCreationResult.getException());
-        }
+        return null;
     }
 
     /* @Path("/{name}")
