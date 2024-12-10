@@ -1,11 +1,10 @@
-package red.tetracube.upspulsar;
+package red.tetracube.upspulsar.scanner;
 
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import red.tetracube.upspulsar.services.UPSScannerService;
 
 @ApplicationScoped
 public class UPSScannerScheduler {

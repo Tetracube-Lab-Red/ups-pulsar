@@ -1,4 +1,4 @@
-package red.tetracube.upspulsar.services;
+package red.tetracube.upspulsar.scanner;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
