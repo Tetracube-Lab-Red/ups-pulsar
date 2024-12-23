@@ -2,10 +2,13 @@ package red.tetracube.upspulsar.device;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import red.tetracube.upspulsar.database.entities.UPSEntity;
-import red.tetracube.upspulsar.device.payloads.kafka.UPSProvisioning;
+import red.tetracube.upspulsar.device.payloads.api.UPSDevice;
 import red.tetracube.upspulsar.dto.Result;
 import red.tetracube.upspulsar.dto.exceptions.UPSPulsarException;
 
@@ -15,7 +18,7 @@ public class UPSDevicesServices {
     private final static Logger LOGGER = LoggerFactory.getLogger(UPSDevicesServices.class);
 
     @Transactional
-    public Result<Void> createDevice(UPSProvisioning request) {
+    public Result<UPSDevice> createDevice(UPSDevice request) {
         LOGGER.info("Searching for another device with same data");
         var exists = UPSEntity.findByIdOptional(request.deviceId).isPresent();
         if (exists) {
@@ -31,16 +34,21 @@ public class UPSDevicesServices {
         device.id = request.deviceId;
         device.persist();
 
-        return Result.success(null);
+        return Result.success(
+            new UPSDevice(device.id, device.host, device.port, device.name)
+        );
     }
 
-    /* @Transactional
-    public Result<UPSDevice> getByName(String name) {
-        return UPSEntity.<UPSEntity>find("name", name)
-                .firstResultOptional()
-                .map(d -> new UPSDevice(d.host, d.port, d.name))
+    @Transactional
+    public Result<UPSDevice> getById(UUID id) {
+        return UPSEntity.<UPSEntity>findByIdOptional(id)
+                .map(d -> new UPSDevice(d.id, d.host, d.port, d.name))
                 .map(Result::success)
-                .orElseGet(() -> Result.failed(new UPSPulsarException.EntityNotFoundException("Device with name " + name + " not found")));
-    } */
+                .orElseGet(() -> 
+                    Result.failed(
+                        new UPSPulsarException.EntityNotFoundException("Device with id " + id.toString() + " not found")
+                    )
+                );
+    } 
 
 }

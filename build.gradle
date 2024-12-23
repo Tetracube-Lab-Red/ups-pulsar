@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation 'io.quarkus:quarkus-redis-client'
     implementation 'io.quarkus:quarkus-container-image-podman'
     implementation 'io.quarkus:quarkus-rest'
     implementation 'io.quarkus:quarkus-scheduler'
@@ -17,8 +18,6 @@ dependencies {
     implementation 'io.quarkus:quarkus-rest-jackson'
     implementation 'io.quarkus:quarkus-hibernate-orm-panache'
     implementation 'io.quarkus:quarkus-jdbc-postgresql'
-    implementation 'io.quarkus:quarkus-messaging-kafka'
-    implementation 'io.quarkus:quarkus-kafka-client'
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-hibernate-orm'
     testImplementation 'io.quarkus:quarkus-junit5'
@@ -26,7 +25,7 @@ dependencies {
 }
 
 group 'red.tetracube'
-version '2.1.0-SNAPSHOT'
+version '3.0.0'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21

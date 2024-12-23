@@ -1,7 +1,7 @@
 package red.tetracube.upspulsar.telemetry;
 
-import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import red.tetracube.upspulsar.database.entities.UPSTelemetryEntity;
 import red.tetracube.upspulsar.telemetry.payloads.kafka.DeviceTelemetryData;
@@ -12,24 +12,32 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import io.quarkus.redis.datasource.RedisDataSource;
+import io.vertx.redis.client.impl.RedisClient;
+
 @ApplicationScoped
 public class UPSTelemetryServices {
 
+    @Inject
+    RedisDataSource redisDataSource;
+
     @Transactional
-    public List<DeviceTelemetryData> getUPSTelemetry(UUID deviceId) {
+    public void publishHistoryTelemetry(UUID deviceId) {
         var timeLimit = Instant.now().minus(1, ChronoUnit.HOURS);
-        return UPSTelemetryEntity.<UPSTelemetryEntity>find(
+        UPSTelemetryEntity.<UPSTelemetryEntity>find(
                 "ups.id = ?1 AND telemetryTS > ?2",
-                        Sort.descending("telemetryTS"),
-                        deviceId,
-                        timeLimit
-                )
-                .stream()
-                .map(UPSTelemetryServices::getUpsTelemetryData)
-                .toList();
+                deviceId,
+                timeLimit
+            )
+            .stream()
+            .map(UPSTelemetryServices::mapTelemetry)
+            .forEach(telemetry ->
+                redisDataSource.pubsub(DeviceTelemetryData.class)
+                    .publish("device-telemetry", telemetry)
+            );
     }
 
-    private static DeviceTelemetryData getUpsTelemetryData(UPSTelemetryEntity telemetry) {
+    private static DeviceTelemetryData mapTelemetry(UPSTelemetryEntity telemetry) {
         var telemetryData = new DeviceTelemetryData.UPSTelemetryData();
         telemetryData.telemetryHealth = telemetry.telemetryHealth;
         telemetryData.telemetryTS = telemetry.telemetryTS;
