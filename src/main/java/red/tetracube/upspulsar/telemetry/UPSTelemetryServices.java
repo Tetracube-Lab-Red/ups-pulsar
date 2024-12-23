@@ -9,11 +9,9 @@ import red.tetracube.upspulsar.telemetry.payloads.kafka.DeviceTelemetryData;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import io.quarkus.redis.datasource.RedisDataSource;
-import io.vertx.redis.client.impl.RedisClient;
 
 @ApplicationScoped
 public class UPSTelemetryServices {
